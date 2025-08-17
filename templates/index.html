@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>AI Meeting Notes Summarizer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; max-width: 980px; }
+    .row { margin-bottom: 16px; }
+    label { font-weight: 600; display: block; margin-bottom: 6px; }
+    input[type="text"], input[type="email"] { width: 100%; padding: 8px; box-sizing: border-box; }
+    textarea { width: 100%; min-height: 300px; padding: 10px; box-sizing: border-box; }
+    button { padding: 10px 16px; cursor: pointer; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 720px){ .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; } }
+    pre#status { background: #f6f8fa; padding: 10px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>AI Meeting Notes Summarizer</h1>
+
+  <div class="grid">
+    <div class="row">
+      <label>Upload transcript (.txt)</label>
+      <input type="file" id="transcript" accept=".txt,text/plain" />
+    </div>
+    <div class="row">
+      <label>Custom instruction</label>
+      <input type="text" id="instruction" placeholder="e.g., Summarize in bullet points for executives" />
+    </div>
+    <div class="row">
+      <button id="generate">Generate Summary</button>
+    </div>
+    <div class="row">
+      <label>Editable summary</label>
+      <textarea id="summary" placeholder="Generated summary will appear here..."></textarea>
+    </div>
+    <div class="two">
+      <div>
+        <label>Recipient emails (comma-separated)</label>
+        <input type="email" id="recipients" placeholder="alice@example.com, bob@example.com" multiple />
+      </div>
+      <div style="align-self:end;">
+        <button id="send">Send Email</button>
+      </div>
+    </div>
+    <pre id="status"></pre>
+  </div>
+
+  <script>
+    async function readFileAsText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsText(file);
+      });
+    }
+
+    document.getElementById("generate").addEventListener("click", async () => {
+      const file = document.getElementById("transcript").files[0];
+      const instruction = document.getElementById("instruction").value.trim();
+      const status = document.getElementById("status");
+      status.textContent = "";
+
+      if (!file) { status.textContent = "Please select a .txt transcript."; return; }
+      if (!instruction) { status.textContent = "Please enter a custom instruction."; return; }
+
+      const text = await readFileAsText(file);
+      const res = await fetch("/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript: text, instruction })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById("summary").value = data.summary || "";
+        status.textContent = "Summary generated.";
+      } else {
+        status.textContent = data.error || "Failed to generate summary.";
+      }
+    });
+
+    document.getElementById("send").addEventListener("click", async () => {
+      const recipients = document.getElementById("recipients").value.trim();
+      const summary = document.getElementById("summary").value.trim();
+      const status = document.getElementById("status");
+      status.textContent = "";
+
+      if (!recipients) { status.textContent = "Enter at least one recipient."; return; }
+      if (!summary) { status.textContent = "Nothing to send. Generate or type a summary."; return; }
+
+      const res = await fetch("/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipients, subject: "Meeting Summary", body: summary })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        status.textContent = data.message || "Email sent.";
+      } else {
+        status.textContent = data.error || "Failed to send email.";
+      }
+    });
+  </script>
+</body>
+</html>

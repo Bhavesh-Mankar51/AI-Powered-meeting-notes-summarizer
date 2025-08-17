@@ -1,0 +1,8 @@
+flask>=3.0.0
+flask-mail>=0.9.1
+python-dotenv>=1.0.1
+langchain>=0.2.14
+langchain-openai>=0.2.2
+langchain-core>=0.2.33
+langchain-community>=0.2.12
+tiktoken>=0.7.0
