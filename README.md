@@ -66,19 +66,8 @@ Once everything is configured, you can start the Flask server.
 
 
 
-#### 📁 Project Structure
-your-repo-name/
-├── app.py                  # Main Flask application file
-├── .env.example            # Template for environment variables
-├── requirements.txt        # Python dependencies
-├── templates/
-│   └── index.html          # Frontend HTML file
-└── agents/
-    ├── __init__.py         # Makes 'agents' a Python package
-    └── summary_agent.py    # Contains the summarization logic
-└── tools/
-    ├── __init__.py         # Makes 'tools' a Python package
-    └── tools.py            # Contains utility tools for agents
+
+
 
 
 #### How to Contribute
